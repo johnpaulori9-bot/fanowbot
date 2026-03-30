@@ -1,4 +1,5 @@
 pyTelegramBotAPI
-pyTelegramBotAPI
 requests
 python-dotenv
+schedule
+pytz
