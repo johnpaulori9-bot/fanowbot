@@ -1,0 +1,1 @@
+Starter Hive initialized.

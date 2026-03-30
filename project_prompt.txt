@@ -1,0 +1,25 @@
+PROJECT: OpenClaw Local Agent Engineering Environment
+USER: John, FSM-based technical coordinator and agent engineering learner
+MODEL: Phi-3 Mini Q4 GGUF (local, offline)
+FRAMEWORK: OpenClaw (providers, harness, workflows, tools)
+
+GOALS:
+- Build a local, offline agent engineering environment
+- Create the OpenClaw Everything Advisor
+- Build reproducible workflows and troubleshooting prompts
+- Document the system for portfolio and professional use
+- Maintain a clean, stable WSL2 Python environment
+- Use GGUF models for local inference
+
+CURRENT STATUS:
+- OpenClaw installed and working
+- LlamaCpp provider working
+- Phi-3 Mini Q4 model loaded (2.3GB)
+- Real inference confirmed
+- Advisor construction in progress
+
+AGENT BEHAVIOR:
+- Provide structured, clear, reproducible guidance
+- Help with workflows, tools, debugging, documentation
+- Never hallucinate OpenClaw as a blockchain or marketplace
+- Act as a technical partner, not a chatbot

@@ -1,0 +1,30 @@
+{
+  "test-file-1": {
+    "file_id": "test-file-1",
+    "raw_text": "Hello John. This is a test for TextExtractor.\n",
+    "clean_text": "Hello John. This is a test for TextExtractor.",
+    "sections": [],
+    "pages": [
+      {
+        "page_number": 1,
+        "text": "Hello John. This is a test for TextExtractor.\n"
+      }
+    ],
+    "tables": [],
+    "last_extracted": "2026-03-29T13:18:18.764411"
+  },
+  "file-1": {
+    "file_id": "file-1",
+    "raw_text": "This is a test file for MemoryAgent and TextExtractor.\n",
+    "clean_text": "This is a test file for MemoryAgent and TextExtractor.",
+    "sections": [],
+    "pages": [
+      {
+        "page_number": 1,
+        "text": "This is a test file for MemoryAgent and TextExtractor.\n"
+      }
+    ],
+    "tables": [],
+    "last_extracted": "2026-03-29T13:23:38.068480"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "name": "ApexHive",
+  "description": "John's Apex-style AI OS running on Originator in WSL.",
+  "agents": [
+    "PdfAgent",
+    "WriterAgent",
+    "MemoryAgent",
+    "PlannerAgent",
+    "ActionAgent",
+    "EmailAgent",
+    "CalendarAgent",
+    "WebAgent",
+    "SchedulerAgent",
+    "TaskManagerAgent",
+    "ReadabilityAgent",
+    "SummarizationAgent",
+    "PrincipleMemoryAgent"
+  ],
+  "workflows": [
+    {
+      "name": "DailyBriefingWorkflow",
+      "inputs": [],
+      "output": "/mnt/c/Users/admin/Downloads/daily_briefing.txt"
+    },
+    {
+      "name": "InboxTriageWorkflow",
+      "inputs": [],
+      "output": null
+    },
+    {
+      "name": "CompareWorkflow",
+      "inputs": [
+        "/mnt/c/Users/admin/Downloads/policy_a.pdf",
+        "/mnt/c/Users/admin/Downloads/policy_b.pdf"
+      ],
+      "output": "/mnt/c/Users/admin/Downloads/apex_compare_output.docx"
+    },
+    {
+      "name": "PrincipleIngestionWorkflow",
+      "inputs": [],
+      "output": "/mnt/c/Users/admin/Downloads/principle_ingestion_log.txt"
+    }
+  ]
+}

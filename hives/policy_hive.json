@@ -1,0 +1,18 @@
+{
+  "name": "PolicyHive",
+  "description": "Hive for policy document analysis and comparison.",
+  "agents": [
+    "PdfAgent",
+    "WriterAgent"
+  ],
+  "workflows": [
+    {
+      "name": "CompareWorkflow",
+      "inputs": [
+        "/mnt/c/Users/admin/Downloads/policy_a.pdf",
+        "/mnt/c/Users/admin/Downloads/policy_b.pdf"
+      ],
+      "output": "/mnt/c/Users/admin/Downloads/policy_compare_output.docx"
+    }
+  ]
+}

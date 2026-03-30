@@ -1,0 +1,23 @@
+[
+  {
+    "name": "BuilderAgent",
+    "class_name": "BuilderAgent",
+    "file": "builderagent.py",
+    "purpose": "builds other agents",
+    "department": "General",
+    "tier": "Standard",
+    "lineage": "Adam(zero)",
+    "version": "1.0.0",
+    "created_at": "2026-03-22T05:56:20.130739Z",
+    "status": "active"
+  },
+  {
+    "name": "BuilderAgent",
+    "file": "/home/admin101/openclaw/my_project/agents/builderagent.py",
+    "purpose": "builds other agents",
+    "department": "General",
+    "tier": "Standard",
+    "lineage": "Adam(zero)",
+    "created": "2026-03-22T15:21:49.126664Z"
+  }
+]
