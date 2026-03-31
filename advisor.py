@@ -3,8 +3,20 @@ import json
 from datetime import datetime
 
 from tools import read_file, list_directory, summarize_text, write_file
-from openclaw.core.consult import build_consult_prompt
-from openclaw.core.memory import MemoryStore
+def build_consult_prompt(query: str):
+    return f"Consult prompt: {query}"
+
+class MemoryStore:
+    def __init__(self):
+        self.data = {}
+
+    def save(self, key, value):
+        self.data[key] = value
+
+    def load(self, key):
+        return self.data.get(key, None)
+
+
 
 
 # Directory where all generated agents will live
