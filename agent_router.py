@@ -19,18 +19,25 @@ def run_agent(agent_name: str, prompt: str):
     if agent_name == "planner":
         plan_output = plan(prompt)
 
-        # If planner returns a single-step dict
-        if "action" in plan_output:
+        # Legacy single-step format
+        if isinstance(plan_output, dict) and "action" in plan_output:
             return _execute_single_step(plan_output["action"], plan_output["input"])
 
-        # If planner returns a multi-step plan
-        if "steps" in plan_output:
-            result = None
+        # Multi-step format
+        if isinstance(plan_output, dict) and "steps" in plan_output:
+            results = []
             for step in plan_output["steps"]:
-                agent = step["agent"]
-                input_data = step["input"]
-                result = _execute_single_step(agent, input_data)
-            return result
+                agent = step.get("agent")
+                input_data = step.get("input", "")
+                step_result = _execute_single_step(agent, input_data)
+                results.append(
+                    {
+                        "agent": agent,
+                        "input": input_data,
+                        "output": step_result,
+                    }
+                )
+            return results
 
         return "Planner returned an invalid plan format."
 
@@ -58,6 +65,9 @@ def run_agent(agent_name: str, prompt: str):
 # INTERNAL HELPER — executes a single step
 # ---------------------------------------------------------
 def _execute_single_step(agent: str, input_data: str):
+    if not agent:
+        return "No agent specified in step."
+
     agent = agent.lower().strip()
 
     if agent == "advisor":
