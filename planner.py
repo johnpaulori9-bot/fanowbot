@@ -1,8 +1,9 @@
 # planner.py
 """
-Multi‑step Planner for Orchestrator Mode (Option D)
-This planner breaks user requests into structured steps
-and assigns each step to the correct agent.
+Multi-step planner for orchestrator mode.
+
+Given a natural language query, returns a plan as:
+    {"steps": [ { "agent": "...", "input": "..." }, ... ]}
 """
 
 def plan(query: str):
@@ -12,26 +13,22 @@ def plan(query: str):
     # 1. CREATE WORKFLOW REQUESTS
     # ---------------------------------------------------------
     if "create a workflow for" in q or "workflow for" in q:
-        # Extract workflow name
-        workflow_name = (
-            q.replace("create a workflow for", "")
-             .replace("workflow for", "")
-             .strip()
-        )
-
+        workflow_name = q
+        for marker in ["create a workflow for", "workflow for"]:
+            if marker in workflow_name:
+                workflow_name = workflow_name.split(marker, 1)[1].strip()
         if not workflow_name:
             workflow_name = "unnamed_workflow"
 
-        # Multi‑step orchestrator plan
         return {
             "steps": [
                 {
                     "agent": "advisor",
-                    "input": f"analyze the domain and requirements for {workflow_name}"
+                    "input": f"Analyze the domain and requirements for '{workflow_name}'."
                 },
                 {
                     "agent": "advisor",
-                    "input": f"identify the components needed for a {workflow_name} workflow"
+                    "input": f"Identify the components needed for a '{workflow_name}' workflow."
                 },
                 {
                     "agent": "originator",
@@ -58,31 +55,34 @@ def plan(query: str):
             }
 
     # ---------------------------------------------------------
-    # 3. TOOL COMMANDS
+    # 3. TOOL-LIKE COMMANDS
     # ---------------------------------------------------------
     if q.startswith("read file "):
+        path = q.replace("read file ", "", 1).strip()
         return {
             "steps": [
-                {"agent": "originator", "input": f"read_file path='{q.replace('read file ', '').strip()}'"}
+                {"agent": "originator", "input": f"read_file path='{path}'"}
             ]
         }
 
     if q.startswith("list directory "):
+        path = q.replace("list directory ", "", 1).strip()
         return {
             "steps": [
-                {"agent": "originator", "input": f"list_directory path='{q.replace('list directory ', '').strip()}'"}
+                {"agent": "originator", "input": f"list_directory path='{path}'"}
             ]
         }
 
     if q.startswith("summarize "):
+        text = q.replace("summarize ", "", 1).strip()
         return {
             "steps": [
-                {"agent": "advisor", "input": f"summarize this: {q.replace('summarize ', '').strip()}"}
+                {"agent": "advisor", "input": f"Summarize this: {text}"}
             ]
         }
 
     # ---------------------------------------------------------
-    # 4. DEFAULT FALLBACK
+    # 4. DEFAULT FALLBACK → ADVISOR
     # ---------------------------------------------------------
     return {
         "steps": [
