@@ -8,45 +8,64 @@ from advisor import Agent as AdvisorAgent
 def run_agent(agent_name: str, prompt: str):
     """
     Unified interface for all agents.
-    agent_name: "planner", "advisor", "originator"
-    prompt: user input
+    Supports multi-step orchestrator plans.
     """
 
     agent_name = agent_name.lower().strip()
 
-    # -----------------------------
-    # PLANNER (function-based agent)
-    # -----------------------------
+    # ---------------------------------------------------------
+    # 1. PLANNER — may return multi-step plan
+    # ---------------------------------------------------------
     if agent_name == "planner":
-        return plan(prompt)
+        plan_output = plan(prompt)
 
-    # -----------------------------
-    # ADVISOR (class with act())
-    # -----------------------------
+        # If planner returns a single-step dict
+        if "action" in plan_output:
+            return _execute_single_step(plan_output["action"], plan_output["input"])
+
+        # If planner returns a multi-step plan
+        if "steps" in plan_output:
+            result = None
+            for step in plan_output["steps"]:
+                agent = step["agent"]
+                input_data = step["input"]
+                result = _execute_single_step(agent, input_data)
+            return result
+
+        return "Planner returned an invalid plan format."
+
+    # ---------------------------------------------------------
+    # 2. DIRECT CALLS TO ADVISOR
+    # ---------------------------------------------------------
     if agent_name == "advisor":
         advisor = AdvisorAgent()
         return advisor.act(prompt)
 
-    # -----------------------------
-    # ORIGINATOR (workflow executor)
-    # -----------------------------
+    # ---------------------------------------------------------
+    # 3. DIRECT CALLS TO ORIGINATOR
+    # ---------------------------------------------------------
     if agent_name == "originator":
         originator = Originator()
+        return originator.run_workflow(prompt)
 
-        # Expecting prompt like: "workflow_name param1=value param2=value"
-        parts = prompt.split()
-        workflow_name = parts[0]
-        kwargs = {}
-
-        # Parse key=value pairs
-        for item in parts[1:]:
-            if "=" in item:
-                key, value = item.split("=", 1)
-                kwargs[key] = value
-
-        return originator.run_workflow(workflow_name, **kwargs)
-
-    # -----------------------------
-    # UNKNOWN AGENT
-    # -----------------------------
+    # ---------------------------------------------------------
+    # 4. UNKNOWN AGENT
+    # ---------------------------------------------------------
     return f"Unknown agent: {agent_name}"
+
+
+# ---------------------------------------------------------
+# INTERNAL HELPER — executes a single step
+# ---------------------------------------------------------
+def _execute_single_step(agent: str, input_data: str):
+    agent = agent.lower().strip()
+
+    if agent == "advisor":
+        advisor = AdvisorAgent()
+        return advisor.act(input_data)
+
+    if agent == "originator":
+        originator = Originator()
+        return originator.run_workflow(input_data)
+
+    return f"Unknown agent in plan: {agent}"
