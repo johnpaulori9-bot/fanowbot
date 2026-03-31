@@ -111,11 +111,57 @@ def plan(message):
 #  AGENT COMMAND
 # ============================================================
 @bot.message_handler(commands=['agent'])
-def agent(message):
-    bot.reply_to(
-        message,
-        respond("agent", "Agent mode activated. What operation should I run?")
-    )
+def agent_handler(message):
+    """
+    Unified /agent entrypoint.
+
+    Usage examples (natural language):
+    - /agent planner create a workflow for land management
+    - /agent advisor help me plan my week
+    - /agent originator restore_forest area=50 priority=high
+    """
+
+    try:
+        # Remove the command itself and trim whitespace
+        text = message.text.replace("/agent", "", 1).strip()
+
+        # If user only typed /agent with nothing else
+        if not text:
+            bot.reply_to(
+                message,
+                "Agent mode activated.\n\n"
+                "Tell me what you want the agent system to do.\n\n"
+                "Examples:\n"
+                "- /agent planner create a workflow for GIS governance\n"
+                "- /agent advisor help me prioritize my tasks\n"
+                "- /agent originator restore_forest area=50 priority=high"
+            )
+            return
+
+        # Split into: first word = agent name, rest = prompt
+        parts = text.split()
+        agent_name = parts[0].lower()
+        prompt = " ".join(parts[1:]) if len(parts) > 1 else ""
+
+        # Import the router here to avoid circular imports at module load time
+        from agent_router import run_agent
+
+        # Call the unified agent router
+        result = run_agent(agent_name, prompt)
+
+        # Reply with the result
+        bot.reply_to(
+            message,
+            f"🔧 Agent `{agent_name}` executed.\n\nResult:\n{result}"
+        )
+
+    except Exception as e:
+        # Catch any error and show it in a controlled way
+        bot.reply_to(
+            message,
+            f"⚠️ Error while running agent `{agent_name}`:\n{e}"
+        )
+
 
 # ============================================================
 #  WORKFLOW COMMAND
