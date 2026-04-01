@@ -71,41 +71,32 @@ def plan(query: str):
     # 1. HIGH-LEVEL "PROCESS SALE" REQUESTS
     # ---------------------------------------------------------
     if "process sale" in q or "record sale" in q or "make a sale" in q:
-        # Try to extract description, amount, currency
         desc, amount, currency = _extract_sale_tokens(query)
 
-        # Build POS + Accounting commands with as much structure as we have
+        # Build POS order command
         pos_order_cmd = f"create_order description='{desc}'"
         if amount is not None:
             pos_order_cmd += f" amount='{amount}'"
         if currency:
             pos_order_cmd += f" currency='{currency}'"
 
+        # Build POS payment intent
         pos_payment_cmd = "create_payment_intent provider='stub' method='card'"
         if amount is not None:
             pos_payment_cmd += f" amount='{amount}'"
         if currency:
             pos_payment_cmd += f" currency='{currency}'"
 
+        # Build accounting command
         accounting_cmd = f"record_sale description='{desc}'"
         if amount is not None:
             accounting_cmd += f" amount='{amount}'"
-        # default account stays "Sales" inside the bot
 
         return {
             "steps": [
-                {
-                    "agent": "pos",
-                    "input": pos_order_cmd,
-                },
-                {
-                    "agent": "pos",
-                    "input": pos_payment_cmd,
-                },
-                {
-                    "agent": "accounting",
-                    "input": accounting_cmd,
-                },
+                {"agent": "pos", "input": pos_order_cmd},
+                {"agent": "pos", "input": pos_payment_cmd},
+                {"agent": "accounting", "input": accounting_cmd},
             ]
         }
 
@@ -113,27 +104,13 @@ def plan(query: str):
     # 2. POS-FOCUSED REQUESTS
     # ---------------------------------------------------------
     if any(k in q for k in ["pos", "point of sale", "payment", "card", "checkout", "order"]):
-        return {
-            "steps": [
-                {
-                    "agent": "pos",
-                    "input": query,
-                }
-            ]
-        }
+        return {"steps": [{"agent": "pos", "input": query}]}
 
     # ---------------------------------------------------------
     # 3. ACCOUNTING-FOCUSED REQUESTS
     # ---------------------------------------------------------
     if any(k in q for k in ["accounting", "ledger", "report", "p&l", "profit and loss", "balance sheet"]):
-        return {
-            "steps": [
-                {
-                    "agent": "accounting",
-                    "input": query,
-                }
-            ]
-        }
+        return {"steps": [{"agent": "accounting", "input": query}]}
 
     # ---------------------------------------------------------
     # 4. DEFAULT: TRY POS FIRST, THEN ACCOUNTING ANALYSIS
