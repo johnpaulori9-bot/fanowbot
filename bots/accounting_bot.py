@@ -19,7 +19,7 @@ import shlex
 from datetime import datetime
 from collections import defaultdict
 
-from memory_engine import insert_ledger_entry, ledger_totals_by_account  # SQLite layer
+from memory_engine import insert_ledger_entry, get_ledger_totals_by_account  # FIXED IMPORT
 
 
 BASE_DIR = os.path.join(os.getcwd(), "data", "finance")
@@ -49,13 +49,6 @@ class AccountingBot:
     """
 
     def run(self, command: str):
-        """
-        Accepts commands like:
-        - record_sale description='Coffee sale to John' amount='5' account='Sales'
-        - generate_report type='P&L' period='2025-01'
-        - analyze_transaction description='...'
-        """
-
         if not command:
             return "Empty accounting command."
 
@@ -100,18 +93,16 @@ class AccountingBot:
             "type": "sale",
         }
 
-        # JSON prototype storage
         ledger.append(entry)
         _save_json(LEDGER_FILE, ledger)
 
-        # SQLite durable storage
         insert_ledger_entry(
             description=description,
             amount=amount,
             account=account,
             entry_type="credit",
             entry_id=entry_id,
-            customer_id=None,  # later: pass real customer_id
+            customer_id=None,
         )
 
         return {
@@ -126,10 +117,8 @@ class AccountingBot:
         report_type = params.get("type", "P&L").upper()
         period = params.get("period", "all")
 
-        # Use SQLite for totals (authoritative)
-        totals = ledger_totals_by_account(customer_id=None)
+        totals = get_ledger_totals_by_account(scope="global", customer_id=None)
 
-        # Use JSON only for count (legacy/prototype)
         ledger = _load_json(LEDGER_FILE)
 
         return {
