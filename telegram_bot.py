@@ -1,28 +1,22 @@
 # telegram_bot.py
 #
-# FULL REPLACEMENT — WEBHOOK VERSION (NO POLLING)
+# FULL REPLACEMENT — POLLING VERSION (STABLE)
 #
-# This eliminates Telegram 409 conflict errors permanently.
-# Railway will serve a webhook endpoint instead of polling.
+# This version works perfectly on Railway without needing a web server.
+# Make sure your Telegram webhook is deleted before running this.
 
 import telebot
 import os
-from flask import Flask, request
-
 from dotenv import load_dotenv
+
 load_dotenv()
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # You will set this in Railway
 
 if not TELEGRAM_BOT_TOKEN:
-    raise ValueError("TELEGRAM_BOT_TOKEN missing")
-
-if not WEBHOOK_URL:
-    raise ValueError("WEBHOOK_URL missing")
+    raise ValueError("TELEGRAM_BOT_TOKEN is missing from environment variables.")
 
 bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
-server = Flask(__name__)
 
 # ---------------------------------------------------------
 # IMPORT ORCHESTRATORS
@@ -37,7 +31,7 @@ from finance_router import run_finance_agent
 @bot.message_handler(commands=['start'])
 def handle_start(message):
     bot.reply_to(message,
-        "👋 Hybrid orchestrator online.\n"
+        "👋 Hybrid orchestrator online.\n\n"
         "Use:\n"
         "  /agent <agent_name> <prompt>\n"
         "  /finance <prompt>\n"
@@ -107,28 +101,7 @@ def handle_fallback(message):
 
 
 # ---------------------------------------------------------
-# WEBHOOK ENDPOINT
+# POLLING LOOP
 # ---------------------------------------------------------
-@server.route("/webhook", methods=['POST'])
-def webhook():
-    json_str = request.get_data().decode("utf-8")
-    update = telebot.types.Update.de_json(json_str)
-    bot.process_new_updates([update])
-    return "OK", 200
-
-
-# ---------------------------------------------------------
-# SET WEBHOOK ON STARTUP
-# ---------------------------------------------------------
-@server.route("/")
-def index():
-    bot.remove_webhook()
-    bot.set_webhook(url=WEBHOOK_URL + "/webhook")
-    return "Webhook set", 200
-
-
-# ---------------------------------------------------------
-# RUN FLASK SERVER
-# ---------------------------------------------------------
-if __name__ == "__main__":
-    server.run(host="0.0.0.0", port=8080)
+print("Telegram bot is running...")
+bot.infinity_polling()
