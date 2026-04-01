@@ -10,12 +10,14 @@ This module coordinates:
 It mirrors your main agent_router pattern, but is scoped to financial flows.
 """
 
+from typing import Any, Dict, List, Union
+
 from finance_planner import plan
 from bots.pos_bot import POSBot
 from bots.accounting_bot import AccountingBot
 
 
-def run_finance_agent(agent_name: str, prompt: str):
+def run_finance_agent(agent_name: str, prompt: str) -> Union[str, Dict[str, Any], List[Dict[str, Any]]]:
     """
     Unified interface for financial agents.
 
@@ -34,7 +36,7 @@ def run_finance_agent(agent_name: str, prompt: str):
         plan_output = plan(prompt)
 
         if isinstance(plan_output, dict) and "steps" in plan_output:
-            results = []
+            results: List[Dict[str, Any]] = []
             for step in plan_output["steps"]:
                 agent = step.get("agent")
                 input_data = step.get("input", "")
@@ -67,7 +69,7 @@ def run_finance_agent(agent_name: str, prompt: str):
     return f"Unknown finance agent: {agent_name}"
 
 
-def _execute_finance_step(agent: str, input_data: str):
+def _execute_finance_step(agent: str, input_data: str) -> Any:
     """
     Internal helper to execute a single financial step.
     """
