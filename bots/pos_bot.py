@@ -8,10 +8,9 @@ It simulates:
 - payment intent creation
 - receipt issuing
 
-Data is stored in JSON files under data/finance/, so it is:
-- simple
-- portable
-- easy to duplicate per customer later
+Data is stored in:
+- JSON files under data/finance/ (prototype)
+- SQLite via memory_engine (for durable, queryable storage)
 """
 
 import os
@@ -19,6 +18,8 @@ import json
 import uuid
 import shlex
 from datetime import datetime
+
+from memory_engine import insert_order, insert_payment  # SQLite layer
 
 
 BASE_DIR = os.path.join(os.getcwd(), "data", "finance")
@@ -40,6 +41,7 @@ def _load_json(path):
 
 
 def _save_json(path, data):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
@@ -54,7 +56,7 @@ class POSBot:
         """
         Accepts commands like:
         - create_order description='Coffee sale to John' amount='5' currency='USD'
-        - create_payment_intent provider='stub' method='card' amount='5' currency='USD'
+        - create_payment_intent provider='stub' method='card' amount='5' currency='USD' order_id='...'
         - issue_receipt order_id='...' channel='email'
 
         Or raw natural language, which it will wrap into a simple order.
@@ -103,15 +105,26 @@ class POSBot:
             "amount": amount,
             "currency": currency,
             "created_at": created_at,
-            "status": "created"
+            "status": "created",
         }
 
+        # JSON prototype storage
         orders.append(order)
         _save_json(ORDERS_FILE, orders)
 
+        # SQLite durable storage (global scope for now)
+        insert_order(
+            description=description,
+            amount=amount,
+            currency=currency,
+            status="created",
+            order_id=order_id,
+            customer_id=None,  # later: pass real customer_id
+        )
+
         return {
             "status": "order_created",
-            "order": order
+            "order": order,
         }
 
     # ---------------------------------------------------------
@@ -125,6 +138,7 @@ class POSBot:
         method = params.get("method", "card")
         amount = float(params.get("amount", "0") or 0)
         currency = params.get("currency", "USD")
+        order_id = params.get("order_id", "unknown")
         created_at = datetime.utcnow().isoformat() + "Z"
 
         payment = {
@@ -134,16 +148,30 @@ class POSBot:
             "method": method,
             "amount": amount,
             "currency": currency,
+            "order_id": order_id,
             "created_at": created_at,
-            "status": "pending"
+            "status": "pending",
         }
 
+        # JSON prototype storage
         payments.append(payment)
         _save_json(PAYMENTS_FILE, payments)
 
+        # SQLite durable storage
+        insert_payment(
+            order_id=order_id,
+            provider=provider,
+            method=method,
+            amount=amount,
+            currency=currency,
+            status="pending",
+            payment_id=payment_id,
+            customer_id=None,  # later: pass real customer_id
+        )
+
         return {
             "status": "payment_intent_created",
-            "payment": payment
+            "payment": payment,
         }
 
     # ---------------------------------------------------------
@@ -163,13 +191,14 @@ class POSBot:
             "order_id": order_id,
             "channel": channel,
             "created_at": created_at,
-            "status": "issued"
+            "status": "issued",
         }
 
+        # JSON only for now (you can add SQLite receipts later if you want)
         receipts.append(receipt)
         _save_json(RECEIPTS_FILE, receipts)
 
         return {
             "status": "receipt_issued",
-            "receipt": receipt
+            "receipt": receipt,
         }
