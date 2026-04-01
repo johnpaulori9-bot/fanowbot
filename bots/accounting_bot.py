@@ -7,8 +7,9 @@ Handles:
 - generating simple reports
 - analyzing transactions
 
-Data is stored in JSON under data/finance/ledger.json for prototypes.
-Customer duplicates later can use SQLite per tenant.
+Data is stored in:
+- JSON under data/finance/ledger.json (prototype)
+- SQLite via memory_engine (for durable, queryable ledger)
 """
 
 import os
@@ -17,6 +18,8 @@ import uuid
 import shlex
 from datetime import datetime
 from collections import defaultdict
+
+from memory_engine import insert_ledger_entry, ledger_totals_by_account  # SQLite layer
 
 
 BASE_DIR = os.path.join(os.getcwd(), "data", "finance")
@@ -94,37 +97,47 @@ class AccountingBot:
             "amount": amount,
             "account": account,
             "created_at": created_at,
-            "type": "sale"
+            "type": "sale",
         }
 
+        # JSON prototype storage
         ledger.append(entry)
         _save_json(LEDGER_FILE, ledger)
 
+        # SQLite durable storage
+        insert_ledger_entry(
+            description=description,
+            amount=amount,
+            account=account,
+            entry_type="credit",
+            entry_id=entry_id,
+            customer_id=None,  # later: pass real customer_id
+        )
+
         return {
             "status": "sale_recorded",
-            "entry": entry
+            "entry": entry,
         }
 
     # ---------------------------------------------------------
     # GENERATE SIMPLE REPORT
     # ---------------------------------------------------------
     def _generate_report(self, params):
-        ledger = _load_json(LEDGER_FILE)
-
         report_type = params.get("type", "P&L").upper()
         period = params.get("period", "all")
 
-        # Very simple aggregation by account
-        totals = defaultdict(float)
-        for entry in ledger:
-            totals[entry["account"]] += entry["amount"]
+        # Use SQLite for totals (authoritative)
+        totals = ledger_totals_by_account(customer_id=None)
+
+        # Use JSON only for count (legacy/prototype)
+        ledger = _load_json(LEDGER_FILE)
 
         return {
             "status": "ok",
             "report_type": report_type,
             "period": period,
-            "totals_by_account": dict(totals),
-            "entries_count": len(ledger)
+            "totals_by_account": totals,
+            "entries_count": len(ledger),
         }
 
     # ---------------------------------------------------------
@@ -137,5 +150,5 @@ class AccountingBot:
         return {
             "status": "analyzed",
             "description": description,
-            "suggested_account": suggested_account
+            "suggested_account": suggested_account,
         }
